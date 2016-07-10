@@ -33,13 +33,13 @@ The following **additional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-<img src='http://i.imgur.com/link/to/your/gif/file.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
-
-GIF created with [LiceCap](http://www.cockos.com/licecap/).
+<img src='https://github.com/dunghuynh1990/Swift-Assigment_1/blob/master/Walk%20through.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+I got issue in search feature that not resonse the result correctly. But finally fix this bug.
+The UI will be update for more information in DetailViewController
+Will implement the switch layout listview to gridview and vice versa.
 
 ## License
 
