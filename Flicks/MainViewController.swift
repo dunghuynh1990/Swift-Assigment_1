@@ -4,7 +4,8 @@
 //
 //  Created by Huynh Tri Dung on 7/9/16.
 //  Copyright © 2016 Huynh Tri Dung. All rights reserved.
-//
+//  TODO: Redesign the UI
+
 
 import UIKit
 import AFNetworking
@@ -22,14 +23,13 @@ class MainViewController: UIViewController{
     var movies = [NSDictionary]()
     var movieSearchResult = [NSDictionary]()
     
-    var endPoint:String = ""
+    var endPoint = ""
     
     let reachability = Reachability.reachabilityForInternetConnection()
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
-        
         navigationController?.navigationBar.tintColor = UIColor.whiteColor()
         navigationController?.navigationBar.translucent = false
         navigationController?.tabBarController?.tabBar.barTintColor = UIColor.darkTextColor()
@@ -98,25 +98,24 @@ class MainViewController: UIViewController{
         self.view.endEditing(true)
         if reachability.isReachable() || reachability.isReachableViaWiFi() || reachability.isReachableViaWWAN(){
             UIApplication.sharedApplication().networkActivityIndicatorVisible = true
-            let task : NSURLSessionDataTask = session.dataTaskWithRequest(request,
-                                                                      completionHandler: { (dataOrNil, response, error) in
-                                                                        if let data = dataOrNil {
-                                                                            if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
-                                                                                data, options:[]) as? NSDictionary {
-                                                                                self.lblNetworkErorr.hidden = true
-                                                                                UIApplication.sharedApplication().networkActivityIndicatorVisible = false
-                                                                                self.movies = (responseDictionary["results"] as! [NSDictionary])
-                                                                                
-                                                                                self.tableView.reloadData()
-                                                                                let dateFormatter = NSDateFormatter()
-                                                                                dateFormatter.dateFormat = "MMM d, h:mm a"
-                                                                                let refreshInfo = "Last update: \(dateFormatter.stringFromDate(NSDate()))"
-                                                                                refreshControl.attributedTitle = NSAttributedString(string: refreshInfo,
-                                                                                    attributes: [NSForegroundColorAttributeName:UIColor.whiteColor()])
-                                                                                refreshControl.endRefreshing()
-                                                                                
-                                                                            }
-                                                                        }
+            let task : NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: {
+                (dataOrNil, response, error) in
+                if let data = dataOrNil {
+                    if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
+                        data, options:[]) as? NSDictionary {
+                        self.lblNetworkErorr.hidden = true
+                        UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                        self.movies = (responseDictionary["results"] as! [NSDictionary])
+                        
+                        let dateFormatter = NSDateFormatter()
+                        dateFormatter.dateFormat = "MMM d, h:mm a"
+                        let refreshInfo = "Last update: \(dateFormatter.stringFromDate(NSDate()))"
+                        refreshControl.attributedTitle = NSAttributedString(string: refreshInfo,
+                            attributes: [NSForegroundColorAttributeName:UIColor.whiteColor()])
+                        self.tableView.reloadData()
+                        refreshControl.endRefreshing()
+                        }
+                    }
             });
             task.resume()
         }
@@ -139,20 +138,18 @@ class MainViewController: UIViewController{
             UIApplication.sharedApplication().networkActivityIndicatorVisible = true
             MBProgressHUD.showHUDAddedTo(self.view, animated: true)
             
-            let task : NSURLSessionDataTask = session.dataTaskWithRequest(request,
-                                                                          completionHandler: { (dataOrNil, response, error) in
-                                                                            if let data = dataOrNil {
-                                                                                UIApplication.sharedApplication().networkActivityIndicatorVisible = false
-                                                                                self.lblNetworkErorr.hidden = true
-                                                                                MBProgressHUD.hideHUDForView(self.view, animated: true)
-                                                                                if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
-                                                                                    data, options:[]) as? NSDictionary {
-                                                                                    
-                                                                                    self.movies = responseDictionary["results"] as! [NSDictionary]
-
-                                                                                    self.tableView.reloadData()
-                                                                                }
-                                                                            }
+            let task : NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: {
+                (dataOrNil, response, error) in
+                if let data = dataOrNil {
+                    UIApplication.sharedApplication().networkActivityIndicatorVisible = false
+                    self.lblNetworkErorr.hidden = true
+                    MBProgressHUD.hideHUDForView(self.view, animated: true)
+                    if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
+                        data, options:[]) as? NSDictionary {
+                        self.movies = responseDictionary["results"] as! [NSDictionary]
+                        self.tableView.reloadData()
+                    }
+                }
             });
             task.resume()
         }
@@ -171,17 +168,17 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
             noDataLabel.textAlignment = NSTextAlignment.Center
             noDataLabel.textColor = UIColor.whiteColor()
             noDataLabel.font.fontWithSize(40)
-            
-            if movieSearchResult.count > 0 {
-                tableView.backgroundView = nil
-                return movieSearchResult.count
-            }else{
+            noDataLabel.text = ""
+            if movieSearchResult.count < 1 {
                 noDataLabel.text = "No Results"
                 tableView.backgroundView = noDataLabel
                 return movieSearchResult.count
+            } else {
+                tableView.backgroundView = nil
+                return movieSearchResult.count
             }
-        }
-        else{
+        } else {
+            tableView.backgroundView = nil
             return movies.count
         }
     }
@@ -196,29 +193,21 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
             movie = movies[indexPath.row]
         }
     
-//        if let posterPath = movie["poster_path"] as? String {
-//            let baseUrl = "http://image.tmdb.org/t/p/w500"
-//            let imgUrl = NSURL(string: baseUrl + posterPath)
-//            cell.movieThumbnail.setImageWithURL(imgUrl!)
-//            
-//            
-//        }
         if let posterPath = movie["poster_path"] as? String {
             let baseUrl = "http://image.tmdb.org/t/p/w500"
             let imageRequest = NSURLRequest(URL: NSURL(string: baseUrl + posterPath)!)
             
             cell.movieThumbnail.setImageWithURLRequest(
                 imageRequest, placeholderImage: nil, success: { (imgUrl, imageResponse, image) in
-                    // imageResponse will be nil if the image is cached
                     if imageResponse != nil {
-                        //                    print("Image was NOT cached, fade in image")
+    //                    print("Image was NOT cached, fade in image")
                         cell.movieThumbnail.alpha = 0.0
                         cell.movieThumbnail.image = image
                         UIView.animateWithDuration(0.3, animations: { () -> Void in
                             cell.movieThumbnail.alpha = 1.0
                         })
                     } else {
-                        //                    print("Image was cached so just update the image")
+    //                    print("Image was cached so just update the image")
                         cell.movieThumbnail.image = image
                     }
                 }, failure: { (imageRequest, imageResponse, eror) in
@@ -226,11 +215,8 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
                     cell.movieThumbnail.setImageWithURL(imgUrl!)
             })
         }
-
-        
         cell.movieTitle.text =   movie["title"] as? String
         cell.movieOverview.text = movie["overview"] as? String
-        
         return cell
     }
     
@@ -241,11 +227,11 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
 
 
 extension MainViewController:UISearchResultsUpdating {
-    
     func updateSearchResultsForSearchController(searchController: UISearchController) {
         movieSearchResult = movies.filter{aMovie in
             return aMovie["title"]!.lowercaseString.containsString(searchController.searchBar.text!.lowercaseString)
         }
         tableView.reloadData()
     }
+    
 }

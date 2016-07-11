@@ -10,6 +10,7 @@ import UIKit
 
 class DetailMovieViewController: UIViewController {
 
+
     @IBOutlet weak var moviePoster: UIImageView!
     @IBOutlet weak var movieTitle: UILabel!
     @IBOutlet weak var movieOverview: UILabel!
@@ -33,30 +34,20 @@ class DetailMovieViewController: UIViewController {
                 smallImageRequest,
                 placeholderImage: nil,
                 success: { (smallImageRequest, smallImageResponse, smallImage) -> Void in
-                    
-                    // smallImageResponse will be nil if the smallImage is already available
-                    // in cache (might want to do something smarter in that case).
                     self.moviePoster.alpha = 0.0
                     self.moviePoster.image = smallImage;
-                    
                     UIView.animateWithDuration(0.3, animations: { () -> Void in
-                        
                         self.moviePoster.alpha = 1.0
-                        
                         }, completion: { (sucess) -> Void in
-                            
-                            // The AFNetworking ImageView Category only allows one request to be sent at a time
-                            // per ImageView. This code must be in the completion block.
                             self.moviePoster.setImageWithURLRequest(
                                 largeImageRequest,
                                 placeholderImage: smallImage,
                                 success: { (largeImageRequest, largeImageResponse, largeImage) -> Void in
-                                    
                                     self.moviePoster.image = largeImage;
                                 },
                                 failure: { (request, response, error) -> Void in
-                                    // do something for the failure condition of the large image request
-                                    // possibly setting the ImageView's image to a default image
+                                    let imgUrl = NSURL(string: largeImageURL + posterPath)
+                                    self.moviePoster.setImageWithURL(imgUrl!)
                             })
                     })
                 },
@@ -65,14 +56,12 @@ class DetailMovieViewController: UIViewController {
                     self.moviePoster.setImageWithURL(imgUrl!)
             })
         }
-        
-        
-        
 
-        
         movieTitle.text = movie["title"] as? String
         movieOverview.text = movie["overview"] as? String
         movieOverview.sizeToFit()
+
+        scrollView.contentSize = CGSizeMake(view.frame.width, infoView.frame.maxY+60)
         
         title = movieTitle.text
     }
