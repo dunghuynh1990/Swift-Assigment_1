@@ -1,4 +1,4 @@
-# Project 1 - *Assigment 1: Flicks*
+# Project Name: *Swift-Week1-Assigment 1:Flicks*
 
 **Flicks** is a movies app using the [The Movie Database API](http://docs.themoviedb.apiary.io/#).
 
