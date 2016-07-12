@@ -5,6 +5,9 @@
 //  Created by Huynh Tri Dung on 7/9/16.
 //  Copyright © 2016 Huynh Tri Dung. All rights reserved.
 //  TODO: Redesign the UI
+//  TODO: Use swifty JSON
+//  TODO: use collection view for grid/list layout
+//  TODO: add place holder image for both screen
 
 
 import UIKit
@@ -31,7 +34,8 @@ class MainViewController: UIViewController{
         navigationController?.navigationBar.translucent = false
         navigationController?.tabBarController?.tabBar.barTintColor = UIColor.darkTextColor()
         navigationController?.tabBarController?.tabBar.tintColor = UIColor.whiteColor()
-        navigationItem.titleView = searchController.searchBar
+        navigationController?.hidesBarsOnSwipe = true
+//        navigationItem.titleView = searchController.searchBar
         
         searchController.searchResultsUpdater = self
         searchController.hidesNavigationBarDuringPresentation = false
@@ -40,28 +44,26 @@ class MainViewController: UIViewController{
         searchController.searchBar.barStyle = UIBarStyle.Black
         definesPresentationContext = false
         
+
+//        let refreshControl = UIRefreshControl()
+//        refreshControl.tintColor = UIColor.whiteColor()
+//        refreshControl.backgroundColor = UIColor.darkTextColor()
+//        refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
+//        tableView.insertSubview(refreshControl, atIndex: 0)
+        
+        fetchData()
+        
         lblNetworkErorr.hidden = true
 
+        tableView.tableHeaderView = searchController.searchBar
         tableView.tableFooterView = UIView()
         
         (UIBarButtonItem.appearanceWhenContainedInInstancesOfClasses([UISearchBar.self])).tintColor = UIColor.whiteColor()
-        
-        let refreshControl = UIRefreshControl()
-        refreshControl.tintColor = UIColor.whiteColor()
-        refreshControl.backgroundColor = UIColor.darkTextColor()
-        refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
-        tableView.insertSubview(refreshControl, atIndex: 0)
-        
-        fetchData()
     }
     
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         searchController.searchBar.resignFirstResponder()
-    }
-    
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
     }
     
     // MARK:Navigation
@@ -195,7 +197,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
         } else {
             movie = movies[indexPath.row]
         }
-        cell.setDataForCell(movie)
+        cell.movie=movie
         return cell
     }
     
