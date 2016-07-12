@@ -5,12 +5,14 @@
 //  Created by Huynh Tri Dung on 7/9/16.
 //  Copyright © 2016 Huynh Tri Dung. All rights reserved.
 //  TODO: Redesign the UI
-
+//  TODO: Make swipe to hide navigation bar on Main. disable on Detail view
+//  TODO: Use swifty JSON
+//  TODO: use collection view for grid/list layout
+//  TODO: add place holder image for both screen
 
 import UIKit
 import AFNetworking
 import MBProgressHUD
-
 
 class MainViewController: UIViewController{
 
@@ -18,24 +20,22 @@ class MainViewController: UIViewController{
     @IBOutlet weak var tableView: UITableView!
 
     let searchController = UISearchController(searchResultsController: nil)
-    
     let API_KEY = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
     var movies = [NSDictionary]()
     var movieSearchResult = [NSDictionary]()
-    
     var endPoint = ""
-    
     let reachability = Reachability.reachabilityForInternetConnection()
-    
     override func viewDidLoad() {
-        
         super.viewDidLoad()
+        
+        //set up navigation
         navigationController?.navigationBar.tintColor = UIColor.whiteColor()
         navigationController?.navigationBar.translucent = false
         navigationController?.tabBarController?.tabBar.barTintColor = UIColor.darkTextColor()
         navigationController?.tabBarController?.tabBar.tintColor = UIColor.whiteColor()
         navigationItem.titleView = searchController.searchBar
         
+        //set up search controller
         searchController.searchResultsUpdater = self
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.dimsBackgroundDuringPresentation = false
@@ -43,17 +43,17 @@ class MainViewController: UIViewController{
         searchController.searchBar.barStyle = UIBarStyle.Black
         definesPresentationContext = false
         
-        lblNetworkErorr.hidden = true
-
-        tableView.tableFooterView = UIView()
-        
-        (UIBarButtonItem.appearanceWhenContainedInInstancesOfClasses([UISearchBar.self])).tintColor = UIColor.whiteColor()
-        
+        //set up refresh control
         let refreshControl = UIRefreshControl()
         refreshControl.tintColor = UIColor.whiteColor()
         refreshControl.backgroundColor = UIColor.darkTextColor()
         refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.insertSubview(refreshControl, atIndex: 0)
+        
+        // other set up
+        lblNetworkErorr.hidden = true
+        tableView.tableFooterView = UIView()
+        (UIBarButtonItem.appearanceWhenContainedInInstancesOfClasses([UISearchBar.self])).tintColor = UIColor.whiteColor()
         
         requestData()
     }
@@ -63,6 +63,7 @@ class MainViewController: UIViewController{
         searchController.searchBar.resignFirstResponder()
     }
     
+    //TODO: should be delete
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
@@ -70,9 +71,7 @@ class MainViewController: UIViewController{
     // MARK:Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         let detailMoviewVC = segue.destinationViewController as! DetailMovieViewController
-        
         let indexPath = tableView.indexPathForSelectedRow
-
         let movie:NSDictionary
         
         if searchController.active && searchController.searchBar.text != "" {
@@ -80,9 +79,7 @@ class MainViewController: UIViewController{
         } else {
             movie = movies[indexPath!.row]
         }
-        
         detailMoviewVC.movie = movie
-
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: UIBarButtonItemStyle.Plain, target: nil, action: nil)
     }
     
@@ -160,6 +157,7 @@ class MainViewController: UIViewController{
     }
 }
 
+// MARK: - UITableViewDelegate, UITableViewDataSource
 extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -172,11 +170,12 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
             if movieSearchResult.count < 1 {
                 noDataLabel.text = "No Results"
                 tableView.backgroundView = noDataLabel
-                return movieSearchResult.count
+                //return movieSearchResult.count
             } else {
                 tableView.backgroundView = nil
-                return movieSearchResult.count
+                //return movieSearchResult.count
             }
+            return movieSearchResult.count
         } else {
             tableView.backgroundView = nil
             return movies.count
@@ -225,7 +224,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
-
+// MARK: - UISearchResultsUpdating
 extension MainViewController:UISearchResultsUpdating {
     func updateSearchResultsForSearchController(searchController: UISearchController) {
         movieSearchResult = movies.filter{aMovie in
@@ -233,5 +232,4 @@ extension MainViewController:UISearchResultsUpdating {
         }
         tableView.reloadData()
     }
-    
 }
