@@ -18,13 +18,10 @@ class MainViewController: UIViewController{
     @IBOutlet weak var tableView: UITableView!
 
     let searchController = UISearchController(searchResultsController: nil)
-    
     let API_KEY = "a07e22bc18f5cb106bfe4cc1f83ad8ed"
     var movies = [NSDictionary]()
     var movieSearchResult = [NSDictionary]()
-    
     var endPoint = ""
-    
     let reachability = Reachability.reachabilityForInternetConnection()
     
     override func viewDidLoad() {
@@ -55,7 +52,7 @@ class MainViewController: UIViewController{
         refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
         tableView.insertSubview(refreshControl, atIndex: 0)
         
-        requestData()
+        fetchData()
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -86,6 +83,7 @@ class MainViewController: UIViewController{
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: UIBarButtonItemStyle.Plain, target: nil, action: nil)
     }
     
+    // MARK:Private methods
     func refreshControlAction(refreshControl: UIRefreshControl) {
         let url = NSURL(string:"https://api.themoviedb.org/3/movie/\(endPoint)?api_key=\(API_KEY)")
         let request = NSURLRequest(URL: url!)
@@ -95,14 +93,18 @@ class MainViewController: UIViewController{
             delegate:nil,
             delegateQueue:NSOperationQueue.mainQueue()
         )
+        
         self.view.endEditing(true)
+       
         if reachability.isReachable() || reachability.isReachableViaWiFi() || reachability.isReachableViaWWAN(){
             UIApplication.sharedApplication().networkActivityIndicatorVisible = true
+            
             let task : NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: {
                 (dataOrNil, response, error) in
                 if let data = dataOrNil {
                     if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
                         data, options:[]) as? NSDictionary {
+                        
                         self.lblNetworkErorr.hidden = true
                         UIApplication.sharedApplication().networkActivityIndicatorVisible = false
                         self.movies = (responseDictionary["results"] as! [NSDictionary])
@@ -125,7 +127,7 @@ class MainViewController: UIViewController{
         }
     }
     
-    func requestData() {
+    func fetchData() {
         let url = NSURL(string:"https://api.themoviedb.org/3/movie/\(endPoint)?api_key=\(API_KEY)")
         let request = NSURLRequest(URL: url!)
         let session = NSURLSession(
@@ -141,6 +143,7 @@ class MainViewController: UIViewController{
             let task : NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: {
                 (dataOrNil, response, error) in
                 if let data = dataOrNil {
+                    
                     UIApplication.sharedApplication().networkActivityIndicatorVisible = false
                     self.lblNetworkErorr.hidden = true
                     MBProgressHUD.hideHUDForView(self.view, animated: true)
@@ -192,31 +195,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
         } else {
             movie = movies[indexPath.row]
         }
-    
-        if let posterPath = movie["poster_path"] as? String {
-            let baseUrl = "http://image.tmdb.org/t/p/w500"
-            let imageRequest = NSURLRequest(URL: NSURL(string: baseUrl + posterPath)!)
-            
-            cell.movieThumbnail.setImageWithURLRequest(
-                imageRequest, placeholderImage: nil, success: { (imgUrl, imageResponse, image) in
-                    if imageResponse != nil {
-    //                    print("Image was NOT cached, fade in image")
-                        cell.movieThumbnail.alpha = 0.0
-                        cell.movieThumbnail.image = image
-                        UIView.animateWithDuration(0.3, animations: { () -> Void in
-                            cell.movieThumbnail.alpha = 1.0
-                        })
-                    } else {
-    //                    print("Image was cached so just update the image")
-                        cell.movieThumbnail.image = image
-                    }
-                }, failure: { (imageRequest, imageResponse, eror) in
-                    let imgUrl = NSURL(string: baseUrl + posterPath)
-                    cell.movieThumbnail.setImageWithURL(imgUrl!)
-            })
-        }
-        cell.movieTitle.text =   movie["title"] as? String
-        cell.movieOverview.text = movie["overview"] as? String
+        cell.setDataForCell(movie)
         return cell
     }
     
