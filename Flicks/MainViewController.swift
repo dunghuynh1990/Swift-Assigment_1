@@ -34,36 +34,40 @@ class MainViewController: UIViewController{
         navigationController?.navigationBar.translucent = false
         navigationController?.tabBarController?.tabBar.barTintColor = UIColor.darkTextColor()
         navigationController?.tabBarController?.tabBar.tintColor = UIColor.whiteColor()
-        navigationController?.hidesBarsOnSwipe = true
-//        navigationItem.titleView = searchController.searchBar
+//        navigationController?.hidesBarsOnSwipe = true
+        navigationItem.titleView = searchController.searchBar
         
         searchController.searchResultsUpdater = self
         searchController.hidesNavigationBarDuringPresentation = false
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Find your favorite movies..."
         searchController.searchBar.barStyle = UIBarStyle.Black
+        searchController.searchBar.backgroundColor = UIColor.darkTextColor()
         definesPresentationContext = false
         
 
-//        let refreshControl = UIRefreshControl()
-//        refreshControl.tintColor = UIColor.whiteColor()
-//        refreshControl.backgroundColor = UIColor.darkTextColor()
-//        refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
-//        tableView.insertSubview(refreshControl, atIndex: 0)
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = UIColor.whiteColor()
+        refreshControl.backgroundColor = UIColor.darkTextColor()
+        refreshControl.addTarget(self, action: #selector(refreshControlAction(_:)), forControlEvents: UIControlEvents.ValueChanged)
+        tableView.insertSubview(refreshControl, atIndex: 0)
         
         fetchData()
         
         lblNetworkErorr.hidden = true
 
-        tableView.tableHeaderView = searchController.searchBar
-        tableView.tableFooterView = UIView()
+//        tableView.tableHeaderView = searchController.searchBar
+        tableView.backgroundView?.backgroundColor = UIColor.darkTextColor()
+        tableView.tableHeaderView?.backgroundColor = UIColor.darkTextColor()
         
+        //Set color for Cancel button in search bar
         (UIBarButtonItem.appearanceWhenContainedInInstancesOfClasses([UISearchBar.self])).tintColor = UIColor.whiteColor()
     }
     
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         searchController.searchBar.resignFirstResponder()
+        
     }
     
     // MARK:Navigation
@@ -96,36 +100,33 @@ class MainViewController: UIViewController{
             delegateQueue:NSOperationQueue.mainQueue()
         )
         
-        self.view.endEditing(true)
-       
+//        self.view.endEditing(true)
+
         if reachability.isReachable() || reachability.isReachableViaWiFi() || reachability.isReachableViaWWAN(){
-            UIApplication.sharedApplication().networkActivityIndicatorVisible = true
-            
+//            refreshControl.beginRefreshing()
             let task : NSURLSessionDataTask = session.dataTaskWithRequest(request, completionHandler: {
-                (dataOrNil, response, error) in
-                if let data = dataOrNil {
+                (data, response, error) in
                     if let responseDictionary = try! NSJSONSerialization.JSONObjectWithData(
-                        data, options:[]) as? NSDictionary {
+                        data!, options:[]) as? NSDictionary {
+                            self.lblNetworkErorr.hidden = true
+                            self.movies = (responseDictionary["results"] as! [NSDictionary])
+                            
+                            let dateFormatter = NSDateFormatter()
+                            dateFormatter.dateFormat = "MMM d, h:mm a"
                         
-                        self.lblNetworkErorr.hidden = true
-                        UIApplication.sharedApplication().networkActivityIndicatorVisible = false
-                        self.movies = (responseDictionary["results"] as! [NSDictionary])
-                        
-                        let dateFormatter = NSDateFormatter()
-                        dateFormatter.dateFormat = "MMM d, h:mm a"
-                        let refreshInfo = "Last update: \(dateFormatter.stringFromDate(NSDate()))"
-                        refreshControl.attributedTitle = NSAttributedString(string: refreshInfo,
-                            attributes: [NSForegroundColorAttributeName:UIColor.whiteColor()])
-                        self.tableView.reloadData()
-                        refreshControl.endRefreshing()
+                            let refreshInfo = "Last update: \(dateFormatter.stringFromDate(NSDate()))"
+                            refreshControl.attributedTitle = NSAttributedString(string: refreshInfo,
+                                attributes: [NSForegroundColorAttributeName:UIColor.whiteColor()])
+                            self.tableView.reloadData()
+                            print("refresh done")
+                            refreshControl.endRefreshing()
                         }
-                    }
             });
             task.resume()
         }
         else {
             self.lblNetworkErorr.hidden = false
-            refreshControl.endRefreshing()
+//            refreshControl.endRefreshing()
         }
     }
     
@@ -169,21 +170,22 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if searchController.active && searchController.searchBar.text != "" {
-            let noDataLabel = UILabel(frame: CGRectMake(0, 0, tableView.bounds.size.width, tableView.frame.size.height/2))
-            noDataLabel.textAlignment = NSTextAlignment.Center
-            noDataLabel.textColor = UIColor.whiteColor()
-            noDataLabel.font.fontWithSize(40)
-            noDataLabel.text = ""
+//            let noDataLabel = UILabel(frame: CGRectMake(0, 0, tableView.bounds.size.width, tableView.frame.size.height/2))
+//            noDataLabel.textAlignment = NSTextAlignment.Center
+////            noDataLabel.backgroundColor = UIColor.darkTextColor()
+//            noDataLabel.textColor = UIColor.whiteColor()
+//            noDataLabel.font.fontWithSize(40)
+//            noDataLabel.text = ""
             if movieSearchResult.count < 1 {
-                noDataLabel.text = "No Results"
-                tableView.backgroundView = noDataLabel
+//                noDataLabel.text = "No Results"
+//                tableView.backgroundView = noDataLabel
                 return movieSearchResult.count
             } else {
-                tableView.backgroundView = nil
+//                tableView.backgroundView = nil
                 return movieSearchResult.count
             }
         } else {
-            tableView.backgroundView = nil
+//            tableView.backgroundView = nil
             return movies.count
         }
     }
@@ -191,7 +193,6 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("MovieCell", forIndexPath: indexPath) as! MovieTableViewCell
         let movie: NSDictionary
-        cell.backgroundColor = UIColor.clearColor()
         if searchController.active && searchController.searchBar.text != "" {
             movie = movieSearchResult[indexPath.row]
         } else {
@@ -204,6 +205,7 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
     }
+    
 }
 
 
